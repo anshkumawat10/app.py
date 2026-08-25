@@ -57,8 +57,12 @@ if "messages" not in st.session_state:
         {"role": "model", "text": "Hello there. I'm here for you. How are you feeling today?"}
     ]
 
-# Input for Gemini API Key
-api_key = st.text_input("Enter your Gemini API Key to start:", type="password")
+# REPLACE WITH THIS:
+api_key = st.secrets.get("GEMINI_API_KEY")
+
+if not api_key:
+    st.error("API Key missing! Please set GEMINI_API_KEY in Streamlit Secrets.")
+    st.stop()
 
 if api_key:
     client = genai.Client(api_key=api_key)

@@ -11,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Cute, Soft Ambient Glassmorphism Theme
+# Custom CSS: Cute Styling + Compact Voice Recorder
 st.markdown("""
 <style>
     .stApp {
@@ -29,38 +29,47 @@ st.markdown("""
         backdrop-filter: blur(16px);
         border: 1px solid rgba(244, 114, 182, 0.3);
         border-radius: 24px;
-        padding: 18px 24px;
-        margin-bottom: 22px;
+        padding: 16px 24px;
+        margin-bottom: 16px;
         box-shadow: 0 10px 30px rgba(244, 114, 182, 0.15);
     }
 
     .ai-cute-avatar {
-        width: 68px;
-        height: 68px;
+        width: 58px;
+        height: 58px;
         border-radius: 50%;
         background: linear-gradient(135deg, #F472B6 0%, #FB923C 50%, #38BDF8 100%);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 36px;
-        box-shadow: 0 0 20px rgba(244, 114, 182, 0.5);
+        font-size: 30px;
+        box-shadow: 0 0 16px rgba(244, 114, 182, 0.5);
         animation: floatCute 3s ease-in-out infinite alternate;
     }
 
     @keyframes floatCute {
-        0% { transform: translateY(0px) rotate(-3deg); box-shadow: 0 0 16px rgba(244, 114, 182, 0.4); }
-        100% { transform: translateY(-6px) rotate(3deg); box-shadow: 0 0 26px rgba(56, 189, 248, 0.6); }
+        0% { transform: translateY(0px) rotate(-3deg); }
+        100% { transform: translateY(-4px) rotate(3deg); }
+    }
+
+    /* CUSTOM COMPACT VOICE RECORDER WIDGET */
+    div[data-testid="stAudioInput"] {
+        max-width: 140px !important;
+        transform: scale(0.85);
+        transform-origin: left center;
+        margin: 0;
+        padding: 0;
     }
 
     /* Warm Interactive Buttons */
     .stButton > button {
-        border-radius: 16px;
+        border-radius: 14px;
         border: 1px solid rgba(255, 255, 255, 0.15);
         background: rgba(255, 255, 255, 0.08);
         color: #F8FAFC;
-        font-size: 1.05rem;
+        font-size: 0.95rem;
         font-weight: 500;
-        padding: 12px;
+        padding: 8px 12px;
         transition: all 0.3s ease;
         width: 100%;
     }
@@ -69,41 +78,38 @@ st.markdown("""
         background: linear-gradient(135deg, #F472B6 0%, #38BDF8 100%);
         color: #0F172A;
         border-color: transparent;
-        transform: translateY(-3px) scale(1.02);
-        box-shadow: 0 8px 20px rgba(244, 114, 182, 0.35);
+        transform: translateY(-2px);
     }
 
     /* Soft Chat Bubbles */
     div[data-testid="stChatMessage"] {
         background: rgba(255, 255, 255, 0.05);
         backdrop-filter: blur(12px);
-        border-radius: 20px;
+        border-radius: 18px;
         border: 1px solid rgba(255, 255, 255, 0.09);
-        padding: 14px 18px;
-        margin-bottom: 12px;
+        padding: 12px 16px;
+        margin-bottom: 10px;
     }
 
     section[data-testid="stSidebar"] {
         background: rgba(15, 23, 42, 0.92);
         border-right: 1px solid rgba(255, 255, 255, 0.1);
     }
-
-    h1, h2, h3 { color: #F8FAFC !important; }
 </style>
 """, unsafe_allow_html=True)
 
-# Cute Mascot Header
+# Cute Header Banner
 st.markdown("""
 <div class="ai-cute-header">
     <div class="ai-cute-avatar">🌸</div>
     <div>
-        <h2 style="margin:0; font-size: 1.6rem; color: #F472B6 !important;">MindEase • Your Comfort Companion ✨</h2>
-        <p style="margin:0; opacity: 0.85; font-size: 0.95rem;">Always here to listen, support, and help • Created with ❤️ by <b>Ansh Kumawat</b></p>
+        <h2 style="margin:0; font-size: 1.5rem; color: #F472B6 !important;">MindEase • Your Comfort Companion ✨</h2>
+        <p style="margin:0; opacity: 0.85; font-size: 0.9rem;">Always here to listen, support, and help • Created by <b>Ansh Kumawat</b></p>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-# API Key Validation
+# API Key Check
 api_key = st.secrets.get("GEMINI_API_KEY")
 if not api_key:
     st.error("API Key missing! Please configure GEMINI_API_KEY in Streamlit Cloud Secrets.")
@@ -128,63 +134,61 @@ with st.sidebar:
     * **Exhale** completely (8s) ✨
     """)
     st.divider()
-    st.warning("🚨 **Need Immediate Help?**\nIf you are in severe distress, reach out: **1800-599-0019** (Tele-MANAS)")
+    st.warning("🚨 **Need Immediate Help?**\nContact: **1800-599-0019** (Tele-MANAS)")
 
-# Cute Mood Check-In Section
-st.subheader("How are you feeling right now? 💖")
+# ---------------------------------------------------------
+# SECTION 1: MOOD BUTTONS & INPUT BAR (PLACED NEAR TOP)
+# ---------------------------------------------------------
+st.markdown("##### How are you feeling right now? 💖")
 col1, col2, col3, col4 = st.columns(4)
 
 if "current_mood" not in st.session_state:
     st.session_state.current_mood = "Neutral"
 
 with col1:
-    if st.button("😊 Radiant & Happy"):
+    if st.button("😊 Radiant"):
         st.session_state.current_mood = "Radiant & Happy"
-        st.toast("Logged: Feeling radiant! Let's celebrate! 🌟")
+        st.toast("Logged: Radiant! 🌟")
 
 with col2:
-    if st.button("🌿 Peaceful & Calm"):
+    if st.button("🌿 Peaceful"):
         st.session_state.current_mood = "Peaceful & Calm"
-        st.toast("Logged: A peaceful mind is a gift. 🍵")
+        st.toast("Logged: Peaceful. 🍵")
 
 with col3:
-    if st.button("😔 Tired & Stressed"):
+    if st.button("😔 Stressed"):
         st.session_state.current_mood = "Tired & Stressed"
-        st.toast("Logged: Sending warm hugs. Take it easy today. 🧸")
+        st.toast("Logged: Take it easy today. 🧸")
 
 with col4:
-    if st.button("😰 Anxious & Uneasy"):
+    if st.button("😰 Anxious"):
         st.session_state.current_mood = "Anxious & Uneasy"
-        st.toast("Logged: I'm right here with you. Take a slow breath. 🫁")
+        st.toast("Logged: I'm right here with you. 🫁")
 
-st.divider()
-
-# Session Chat Initialization
-if "messages" not in st.session_state:
-    st.session_state.messages = [
-        {"role": "model", "text": "Hi there! 🌸 I'm MindEase, your cozy companion. Whether you want to share how your day went, vent, talk through a problem, or ask a question—I'm listening with all my heart!"}
-    ]
-
-# Render Messages with Cute Icons
-for msg in st.session_state.messages:
-    avatar_icon = "🌸" if msg["role"] == "model" else "✨"
-    with st.chat_message("assistant" if msg["role"] == "model" else "user", avatar=avatar_icon):
-        st.write(msg["text"])
-
-# Multi-Input Bar
-col_mic, col_attach, col_input = st.columns([2, 1, 9])
+# Compact Multimodal Input Controls (Voice, File, Text)
+col_mic, col_attach, col_input = st.columns([1.5, 1, 9.5])
 
 with col_mic:
     voice_input = st.audio_input("Record Voice", key="voice_recorder", label_visibility="collapsed")
 
 with col_attach:
     with st.popover("📎"):
-        uploaded_file = st.file_uploader("Share document or image", type=["pdf", "png", "jpg", "jpeg"], key="doc_uploader")
+        uploaded_file = st.file_uploader("Attach file", type=["pdf", "png", "jpg", "jpeg"], key="doc_uploader")
 
 with col_input:
     user_text = st.chat_input("Tell me what's on your mind... 💭")
 
-# Build Inputs
+st.divider()
+
+# ---------------------------------------------------------
+# SECTION 2: CHAT HISTORY & PROCESSING (PLACED BELOW INPUTS)
+# ---------------------------------------------------------
+if "messages" not in st.session_state:
+    st.session_state.messages = [
+        {"role": "model", "text": "Hi there! 🌸 I'm MindEase. Type a message or click the mic above to speak with me directly!"}
+    ]
+
+# Handle Logic for Incoming User Prompts
 user_prompt = user_text
 input_parts = []
 has_attachment = False
@@ -202,48 +206,43 @@ if uploaded_file:
 if user_text:
     input_parts.append(types.Part.from_text(text=user_text))
 
-# Execute Response
 if user_prompt or has_attachment:
     st.session_state.messages.append({"role": "user", "text": user_prompt})
-    with st.chat_message("user", avatar="✨"):
-        st.write(user_prompt)
 
-    with st.chat_message("assistant", avatar="🌸"):
-        with st.spinner("Listening with care... ✨"):
-            # System Prompt explicitly engineered for deep empathy & tone matching
-            sys_instruction = (
-                "You are MindEase, a cute, warm, ultra-intelligent, and deeply empathetic AI companion created by Ansh Kumawat. "
-                "If asked who built or created you, state explicitly that you were created by Ansh Kumawat. "
-                f"CURRENT USER MOOD CONTEXT: '{st.session_state.current_mood}'. "
-                "TONE RULES: "
-                "1. Read the user's emotional state carefully from their words, voice note, or mood check-in. "
-                "2. Adapt your tone dynamically: use soft, gentle, and comforting words when they feel anxious or stressed; use cheerful, warm, and uplifting energy when they are happy; use clear, encouraging guidance when they need practical help. "
-                "3. Always validate their feelings first before offering solutions or insights. "
-                "4. Sprinkle warm, cute emojis (like 🌸, ✨, 🧸, 🌿, ☕, 🐾) naturally—do not overdo it, but keep the vibe cozy and inviting. "
-                "5. Keep responses concise, supportive, and human-like (2-4 sentences per turn unless analyzing a document)."
-            )
+    # Call Gemini API
+    sys_instruction = (
+        "You are MindEase, a cute, warm, ultra-intelligent, and deeply empathetic AI companion created by Ansh Kumawat. "
+        "If asked who built or created you, state explicitly that you were created by Ansh Kumawat. "
+        f"CURRENT USER MOOD CONTEXT: '{st.session_state.current_mood}'. "
+        "Adapt your tone dynamically: gentle & soothing when stressed, cheerful when happy, clear & practical when solving tasks. "
+        "Sprinkle warm, cute emojis (🌸, ✨, 🧸, 🌿) naturally. Keep responses concise (2-4 sentences max per turn)."
+    )
 
-            contents = [
-                types.Content(
-                    role=m["role"],
-                    parts=[types.Part.from_text(text=m["text"])]
-                ) for m in st.session_state.messages[:-1]
-            ]
-            
-            if user_text and not has_attachment:
-                contents.append(types.Content(role="user", parts=[types.Part.from_text(text=user_text)]))
-            else:
-                contents.append(types.Content(role="user", parts=input_parts))
+    contents = [
+        types.Content(
+            role=m["role"],
+            parts=[types.Part.from_text(text=m["text"])]
+        ) for m in st.session_state.messages[:-1]
+    ]
+    
+    if user_text and not has_attachment:
+        contents.append(types.Content(role="user", parts=[types.Part.from_text(text=user_text)]))
+    else:
+        contents.append(types.Content(role="user", parts=input_parts))
 
-            response = client.models.generate_content(
-                model=selected_model,
-                contents=contents,
-                config=types.GenerateContentConfig(
-                    system_instruction=sys_instruction,
-                    temperature=0.7,
-                )
-            )
+    response = client.models.generate_content(
+        model=selected_model,
+        contents=contents,
+        config=types.GenerateContentConfig(
+            system_instruction=sys_instruction,
+            temperature=0.7,
+        )
+    )
 
-            reply_text = response.text
-            st.write(reply_text)
-            st.session_state.messages.append({"role": "model", "text": reply_text})
+    st.session_state.messages.append({"role": "model", "text": response.text})
+
+# Render Chat History
+for msg in st.session_state.messages:
+    avatar_icon = "🌸" if msg["role"] == "model" else "✨"
+    with st.chat_message("assistant" if msg["role"] == "model" else "user", avatar=avatar_icon):
+        st.write(msg["text"])

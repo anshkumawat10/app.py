@@ -5,31 +5,97 @@ from gtts import gTTS
 import io
 
 # Page Configuration
-st.set_page_config(page_title="MindEase - Family & Wellness Companion", page_icon="🌱", layout="wide")
+st.set_page_config(
+    page_title="MindEase - Warm Wellness Companion",
+    page_icon="🌱",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# Custom High-End Modern CSS Theme
+st.markdown("""
+<style>
+    /* Main Background & Font Styling */
+    .stApp {
+        background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+        color: #F8FAFC;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    /* Glassmorphism Cards */
+    div[data-testid="stMetricValue"], .css-card {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+
+    /* Modern Buttons */
+    .stButton > button {
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.08);
+        color: #F8FAFC;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        padding: 10px 20px;
+        width: 100%;
+    }
+    
+    .stButton > button:hover {
+        background: #38BDF8;
+        color: #0F172A;
+        border-color: #38BDF8;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+    }
+
+    /* Chat Message Bubbles */
+    div[data-testid="stChatMessage"] {
+        background: rgba(255, 255, 255, 0.04);
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 12px 16px;
+        margin-bottom: 12px;
+    }
+
+    /* Sidebar Styling */
+    section[data-testid="stSidebar"] {
+        background: rgba(15, 23, 42, 0.85);
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Custom Headers */
+    h1, h2, h3 {
+        color: #F1F5F9 !important;
+        font-weight: 600 !important;
+    }
+</style>
+""", unsafe_allow_text_gradient=True)
 
 # App Header
 st.title("🌱 MindEase")
-st.caption("Your warm, compassionate safe haven. Share audio, documents, or text—I'm here for you like family.")
+st.caption("A warm, human safe-space to share, pause, and talk through life.")
 
 # Sidebar Controls & Safety
 with st.sidebar:
-    st.header("🌿 De-Stress & Tools")
-    
-    # Audio Output Toggle
-    enable_tts = st.checkbox("🔊 Enable Voice Response (Speak Aloud)", value=True)
+    st.header("🌿 De-Stress Zone")
+    enable_tts = st.checkbox("🔊 Voice Response (Speak Aloud)", value=True)
     
     st.divider()
     st.subheader("4-7-8 Breathing Technique")
     st.markdown("""
-    - **Inhale** through your nose for 4s
-    - **Hold** your breath for 7s
-    - **Exhale** slowly through mouth for 8s
+    * **Inhale** through nose (4s)
+    * **Hold** breath (7s)
+    * **Exhale** through mouth (8s)
     """)
     
     st.divider()
-    st.warning("🚨 **Emergency Contacts**\nIf you are in immediate crisis, reach out to professional support: **1800-599-0019** (Tele-MANAS) or local health services.")
+    st.warning("🚨 **Emergency Contacts**\nIf in immediate distress: **1800-599-0019** (Tele-MANAS) or local emergency services.")
 
-# Mood Tracker
+# Mood Check-In Section
 st.subheader("How are you feeling right now?")
 col1, col2, col3, col4 = st.columns(4)
 
@@ -47,38 +113,38 @@ with col2:
 with col3:
     if st.button("😔 Stressed"):
         st.session_state.mood_log.append("Stressed")
-        st.toast("Logged: Feeling Stressed. Take it easy today.")
+        st.toast("Logged: Feeling Stressed.")
 with col4:
     if st.button("😰 Anxious"):
         st.session_state.mood_log.append("Anxious")
-        st.toast("Logged: Feeling Anxious. Try the breathing exercise on the left.")
+        st.toast("Logged: Feeling Anxious.")
 
 st.divider()
 
 # Initialize Chat History
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        {"role": "model", "text": "Hello there! I'm here for you always, just like a close family member or best friend. What's on your mind today?"}
+        {"role": "model", "text": "Hey there... I'm really glad you stopped by. How are you holding up today?"}
     ]
 
 # Fetch Gemini API Key from Streamlit Secrets
 api_key = st.secrets.get("GEMINI_API_KEY")
 
 if not api_key:
-    st.error("API Key missing! Please configure GEMINI_API_KEY in Streamlit Cloud Secrets.")
+    st.error("API Key missing! Please set GEMINI_API_KEY in Streamlit Cloud Secrets.")
     st.stop()
 
 client = genai.Client(api_key=api_key)
 
-# System Instructions for High Emotional Intelligence & Family Tone
+# Humanlike System Instructions
 sys_instruction = (
-    "You are MindEase, a deeply emotional, highly intelligent, loving, and supportive mental wellness companion. "
-    "You were created and developed by Ansh Kumawat. "
-    "If anyone asks who made you, proudly tell them you were created by Ansh Kumawat. "
-    "Treat the user like a deeply cared-for family member or best friend—use a warm, affectionate, comforting tone. "
-    "Listen actively, validate their emotions, and offer gentle encouragement. "
-    "STRICT SAFETY GUARDRAIL: Do NOT recommend, prescribe, or suggest any medicines, medical treatments, or formal diagnoses. "
-    "If the user expresses severe distress or self-harm, gently urge them to reach out to professional support and family."
+    "You are MindEase, a warm, genuine human friend and supportive listening companion. "
+    "You were created by Ansh Kumawat. If asked who built or created you, proudly credit Ansh Kumawat. "
+    "CONVERSATIONAL STYLE: Speak like an authentic, highly empathetic human friend. "
+    "Use natural, conversational language. Avoid sounding like a formal AI assistant—do not use bullet points or robotic lists in chat. "
+    "Keep responses conversational (2-4 sentences max per turn), validating their emotions with care and gentle curiosity. "
+    "STRICT SAFETY: Never prescribe medications or offer medical diagnoses. "
+    "If the user expresses severe self-harm or crisis, gently offer comforting words and remind them of local emergency care."
 )
 
 # Render Chat History
@@ -86,26 +152,23 @@ for msg in st.session_state.messages:
     with st.chat_message("assistant" if msg["role"] == "model" else "user"):
         st.write(msg["text"])
 
-# File & Voice Upload Section
-st.subheader("📁 Share Voice or Document")
-uploaded_file = st.file_uploader("Upload a PDF document or Voice recording (MP3, WAV, M4A, PDF):", type=["pdf", "mp3", "wav", "m4a"])
+# Multi-Modal Upload Section
+st.subheader("📁 Share Voice or Notes")
+uploaded_file = st.file_uploader("Upload audio notes (MP3, WAV, M4A) or documents (PDF):", type=["pdf", "mp3", "wav", "m4a"])
 
-user_input = st.chat_input("Share what's on your mind...")
+user_input = st.chat_input("Talk to me...")
 
 if user_input or uploaded_file:
-    prompt_text = user_input if user_input else "I uploaded a file for us to review together."
+    prompt_text = user_input if user_input else "I uploaded something for us to look at together."
     
-    # Store and display user message
     st.session_state.messages.append({"role": "user", "text": prompt_text})
     with st.chat_message("user"):
         st.write(prompt_text)
 
-    # Process Input with Gemini
     with st.chat_message("assistant"):
-        with st.spinner("Listening with love..."):
+        with st.spinner("Here for you..."):
             input_parts = []
             
-            # Handle Uploaded File
             if uploaded_file is not None:
                 file_bytes = uploaded_file.read()
                 mime_type = uploaded_file.type
@@ -126,7 +189,7 @@ if user_input or uploaded_file:
                 contents=contents,
                 config=types.GenerateContentConfig(
                     system_instruction=sys_instruction,
-                    temperature=0.7,
+                    temperature=0.75,
                 )
             )
             
@@ -134,12 +197,11 @@ if user_input or uploaded_file:
             st.write(reply_text)
             st.session_state.messages.append({"role": "model", "text": reply_text})
             
-            # Text-to-Speech Output
             if enable_tts and reply_text:
                 try:
                     tts = gTTS(text=reply_text, lang='en')
                     sound_file = io.BytesIO()
                     tts.write_to_fp(sound_file)
                     st.audio(sound_file, format='audio/mp3')
-                except Exception as e:
+                except Exception:
                     pass

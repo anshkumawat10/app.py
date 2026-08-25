@@ -11,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS: Cute Styling + Compact Voice Recorder
+# Custom Styling: Cute Aesthetic + Compact Mic Widget
 st.markdown("""
 <style>
     .stApp {
@@ -52,16 +52,16 @@ st.markdown("""
         100% { transform: translateY(-4px) rotate(3deg); }
     }
 
-    /* CUSTOM COMPACT VOICE RECORDER WIDGET */
+    /* COMPACT VOICE RECORDER WIDGET */
     div[data-testid="stAudioInput"] {
-        max-width: 140px !important;
+        max-width: 130px !important;
         transform: scale(0.85);
         transform-origin: left center;
         margin: 0;
         padding: 0;
     }
 
-    /* Warm Interactive Buttons */
+    /* Mood Buttons */
     .stButton > button {
         border-radius: 14px;
         border: 1px solid rgba(255, 255, 255, 0.15);
@@ -109,7 +109,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# API Key Check
+# API Key Validation
 api_key = st.secrets.get("GEMINI_API_KEY")
 if not api_key:
     st.error("API Key missing! Please configure GEMINI_API_KEY in Streamlit Cloud Secrets.")
@@ -136,9 +136,7 @@ with st.sidebar:
     st.divider()
     st.warning("🚨 **Need Immediate Help?**\nContact: **1800-599-0019** (Tele-MANAS)")
 
-# ---------------------------------------------------------
-# SECTION 1: MOOD BUTTONS & INPUT BAR (PLACED NEAR TOP)
-# ---------------------------------------------------------
+# Mood Check-In Section at Top
 st.markdown("##### How are you feeling right now? 💖")
 col1, col2, col3, col4 = st.columns(4)
 
@@ -165,30 +163,32 @@ with col4:
         st.session_state.current_mood = "Anxious & Uneasy"
         st.toast("Logged: I'm right here with you. 🫁")
 
-# Compact Multimodal Input Controls (Voice, File, Text)
-col_mic, col_attach, col_input = st.columns([1.5, 1, 9.5])
-
-with col_mic:
-    voice_input = st.audio_input("Record Voice", key="voice_recorder", label_visibility="collapsed")
-
-with col_attach:
-    with st.popover("📎"):
-        uploaded_file = st.file_uploader("Attach file", type=["pdf", "png", "jpg", "jpeg"], key="doc_uploader")
-
-with col_input:
-    user_text = st.chat_input("Tell me what's on your mind... 💭")
-
 st.divider()
 
-# ---------------------------------------------------------
-# SECTION 2: CHAT HISTORY & PROCESSING (PLACED BELOW INPUTS)
-# ---------------------------------------------------------
+# Initialize Chat History
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        {"role": "model", "text": "Hi there! 🌸 I'm MindEase. Type a message or click the mic above to speak with me directly!"}
+        {"role": "model", "text": "Hi there! 🌸 I'm MindEase, your cozy companion. How can I help you today?"}
     ]
 
-# Handle Logic for Incoming User Prompts
+# 1. RENDER ALL CHAT MESSAGES IN THE MIDDLE BODY
+for msg in st.session_state.messages:
+    avatar_icon = "🌸" if msg["role"] == "model" else "✨"
+    with st.chat_message("assistant" if msg["role"] == "model" else "user", avatar=avatar_icon):
+        st.write(msg["text"])
+
+# 2. MEDIA ATTACHMENTS BAR (Voice + Document) JUST ABOVE THE BOTTOM INPUT
+with st.expander("🎙️ / 📎 Record Voice or Attach Document", expanded=False):
+    col_mic, col_attach = st.columns([1, 3])
+    with col_mic:
+        voice_input = st.audio_input("Record Voice", key="voice_recorder", label_visibility="collapsed")
+    with col_attach:
+        uploaded_file = st.file_uploader("Attach file", type=["pdf", "png", "jpg", "jpeg"], key="doc_uploader", label_visibility="collapsed")
+
+# 3. NATIVE BOTTOM CHAT INPUT (Pinned at bottom of page)
+user_text = st.chat_input("Tell me what's on your mind... 💭")
+
+# Handle User Input Processing
 user_prompt = user_text
 input_parts = []
 has_attachment = False
@@ -209,7 +209,7 @@ if user_text:
 if user_prompt or has_attachment:
     st.session_state.messages.append({"role": "user", "text": user_prompt})
 
-    # Call Gemini API
+    # Prepare Gemini Request
     sys_instruction = (
         "You are MindEase, a cute, warm, ultra-intelligent, and deeply empathetic AI companion created by Ansh Kumawat. "
         "If asked who built or created you, state explicitly that you were created by Ansh Kumawat. "
@@ -240,9 +240,4 @@ if user_prompt or has_attachment:
     )
 
     st.session_state.messages.append({"role": "model", "text": response.text})
-
-# Render Chat History
-for msg in st.session_state.messages:
-    avatar_icon = "🌸" if msg["role"] == "model" else "✨"
-    with st.chat_message("assistant" if msg["role"] == "model" else "user", avatar=avatar_icon):
-        st.write(msg["text"])
+    st.rerun()

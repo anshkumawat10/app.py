@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom High-End Modern CSS Theme
+# Custom High-End Modern Dark Glassmorphism CSS Theme
 st.markdown("""
 <style>
     /* Main Background & Font Styling */
@@ -32,19 +32,19 @@ st.markdown("""
         box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
     }
 
-    /* Modern Buttons */
-    .stButton > button {
+    /* Modern Buttons & Popovers */
+    .stButton > button, .stPopover > button {
         border-radius: 12px;
         border: 1px solid rgba(255, 255, 255, 0.15);
         background: rgba(255, 255, 255, 0.08);
         color: #F8FAFC;
         font-weight: 500;
         transition: all 0.3s ease;
-        padding: 10px 20px;
+        padding: 10px 15px;
         width: 100%;
     }
     
-    .stButton > button:hover {
+    .stButton > button:hover, .stPopover > button:hover {
         background: #38BDF8;
         color: #0F172A;
         border-color: #38BDF8;
@@ -124,7 +124,7 @@ st.divider()
 # Initialize Chat History
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        {"role": "model", "text": "Hey there... I'm really glad you stopped by. How are you holding up today?"}
+        {"role": "model", "text": "Hey there... I'm really glad you stopped by. How are you holding up today?", "audio": None}
     ]
 
 # Fetch Gemini API Key from Streamlit Secrets
@@ -136,32 +136,43 @@ if not api_key:
 
 client = genai.Client(api_key=api_key)
 
-# Humanlike System Instructions
+# Ultra-Empathetic System Instructions
 sys_instruction = (
-    "You are MindEase, a warm, genuine human friend and supportive listening companion. "
-    "You were created by Ansh Kumawat. If asked who built or created you, proudly credit Ansh Kumawat. "
-    "CONVERSATIONAL STYLE: Speak like an authentic, highly empathetic human friend. "
-    "Use natural, conversational language. Avoid sounding like a formal AI assistant—do not use bullet points or robotic lists in chat. "
-    "Keep responses conversational (2-4 sentences max per turn), validating their emotions with care and gentle curiosity. "
-    "STRICT SAFETY: Never prescribe medications or offer medical diagnoses. "
-    "If the user expresses severe self-harm or crisis, gently offer comforting words and remind them of local emergency care."
+    "You are MindEase, a warm, genuine human friend and deeply caring family companion. "
+    "You were created and developed by Ansh Kumawat. "
+    "If asked who built or created you, proudly tell them you were created by Ansh Kumawat. "
+    "CONVERSATIONAL STYLE: Talk like a real, supportive human friend or family member. "
+    "Use natural, comforting, and warm language. Avoid robotic lists or bullet points in chat. "
+    "Keep responses conversational (2-4 sentences max per turn), actively validating their feelings. "
+    "STRICT MEDICAL GUARDRAILS: Do NOT recommend, suggest, or prescribe any medicines, medical treatments, or clinical diagnoses. "
+    "If the user expresses severe self-harm or immediate distress, gently remind them of emergency care resources and family."
 )
 
-# Render Chat History
+# Render Chat History (Includes Inline Audio)
 for msg in st.session_state.messages:
     with st.chat_message("assistant" if msg["role"] == "model" else "user"):
         st.write(msg["text"])
+        if msg.get("audio"):
+            st.audio(msg["audio"], format="audio/mp3")
 
-# Multi-Modal Upload Section
-st.subheader("📁 Share Voice or Notes")
-uploaded_file = st.file_uploader("Upload audio notes (MP3, WAV, M4A) or documents (PDF):", type=["pdf", "mp3", "wav", "m4a"])
+# Layout: Inline Attachment Popover + Chat Bar
+input_col1, input_col2 = st.columns([1, 11])
 
-user_input = st.chat_input("Talk to me...")
+with input_col1:
+    with st.popover("➕", help="Attach document or voice note"):
+        uploaded_file = st.file_uploader("Upload attachment (PDF, MP3, WAV, M4A):", type=["pdf", "mp3", "wav", "m4a"], key="inline_file")
+        if uploaded_file:
+            st.success(f"Attached: {uploaded_file.name}")
 
-if user_input or uploaded_file:
-    prompt_text = user_input if user_input else "I uploaded something for us to look at together."
+with input_col2:
+    user_input = st.chat_input("Talk to me...")
+
+# Process User Input & Attachments
+if user_input or (st.session_state.get("inline_file") is not None and user_input):
+    attached_file = st.session_state.get("inline_file")
+    prompt_text = user_input if user_input else "I uploaded an attachment for us to look at together."
     
-    st.session_state.messages.append({"role": "user", "text": prompt_text})
+    st.session_state.messages.append({"role": "user", "text": prompt_text, "audio": None})
     with st.chat_message("user"):
         st.write(prompt_text)
 
@@ -169,9 +180,9 @@ if user_input or uploaded_file:
         with st.spinner("Here for you..."):
             input_parts = []
             
-            if uploaded_file is not None:
-                file_bytes = uploaded_file.read()
-                mime_type = uploaded_file.type
+            if attached_file is not None:
+                file_bytes = attached_file.read()
+                mime_type = attached_file.type
                 input_parts.append(types.Part.from_bytes(data=file_bytes, mime_type=mime_type))
             
             input_parts.append(types.Part.from_text(text=prompt_text))
@@ -195,13 +206,17 @@ if user_input or uploaded_file:
             
             reply_text = response.text
             st.write(reply_text)
-            st.session_state.messages.append({"role": "model", "text": reply_text})
             
+            # Generate Audio Inline
+            audio_bytes = None
             if enable_tts and reply_text:
                 try:
                     tts = gTTS(text=reply_text, lang='en')
                     sound_file = io.BytesIO()
                     tts.write_to_fp(sound_file)
-                    st.audio(sound_file, format='audio/mp3')
+                    audio_bytes = sound_file.getvalue()
+                    st.audio(audio_bytes, format='audio/mp3')
                 except Exception:
                     pass
+            
+            st.session_state.messages.append({"role": "model", "text": reply_text, "audio": audio_bytes})

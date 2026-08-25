@@ -11,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom Styling: Cute Aesthetic + Compact Mic Widget
+# Custom Styling: Cute Aesthetic + Inline Bottom Controls
 st.markdown("""
 <style>
     .stApp {
@@ -52,13 +52,25 @@ st.markdown("""
         100% { transform: translateY(-4px) rotate(3deg); }
     }
 
-    /* COMPACT VOICE RECORDER WIDGET */
+    /* COMPACT VOICE & POP-OVER WIDGETS AT BOTTOM */
     div[data-testid="stAudioInput"] {
         max-width: 130px !important;
         transform: scale(0.85);
-        transform-origin: left center;
+        transform-origin: left bottom;
         margin: 0;
         padding: 0;
+    }
+
+    .stPopover > button {
+        border-radius: 50% !important;
+        width: 42px !important;
+        height: 42px !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: rgba(255, 255, 255, 0.1) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
     }
 
     /* Mood Buttons */
@@ -109,7 +121,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# API Key Validation
+# API Key Check
 api_key = st.secrets.get("GEMINI_API_KEY")
 if not api_key:
     st.error("API Key missing! Please configure GEMINI_API_KEY in Streamlit Cloud Secrets.")
@@ -171,24 +183,28 @@ if "messages" not in st.session_state:
         {"role": "model", "text": "Hi there! 🌸 I'm MindEase, your cozy companion. How can I help you today?"}
     ]
 
-# 1. RENDER ALL CHAT MESSAGES IN THE MIDDLE BODY
+# 1. RENDER CHAT HISTORY (MIDDLE BODY)
 for msg in st.session_state.messages:
     avatar_icon = "🌸" if msg["role"] == "model" else "✨"
     with st.chat_message("assistant" if msg["role"] == "model" else "user", avatar=avatar_icon):
         st.write(msg["text"])
 
-# 2. MEDIA ATTACHMENTS BAR (Voice + Document) JUST ABOVE THE BOTTOM INPUT
-with st.expander("🎙️ / 📎 Record Voice or Attach Document", expanded=False):
-    col_mic, col_attach = st.columns([1, 3])
-    with col_mic:
-        voice_input = st.audio_input("Record Voice", key="voice_recorder", label_visibility="collapsed")
-    with col_attach:
-        uploaded_file = st.file_uploader("Attach file", type=["pdf", "png", "jpg", "jpeg"], key="doc_uploader", label_visibility="collapsed")
+# 2. BOTTOM BAR: VOICE (LEFT) + ATTACHMENT (LEFT) + TEXT INPUT (RIGHT)
+bottom_col_mic, bottom_col_attach, bottom_col_text = st.columns([1.5, 0.8, 9.7])
 
-# 3. NATIVE BOTTOM CHAT INPUT (Pinned at bottom of page)
-user_text = st.chat_input("Tell me what's on your mind... 💭")
+with bottom_col_mic:
+    voice_input = st.audio_input("Record Voice", key="voice_recorder", label_visibility="collapsed")
 
-# Handle User Input Processing
+with bottom_col_attach:
+    with st.popover("📎", help="Attach document or photo"):
+        uploaded_file = st.file_uploader("Upload Document / Image", type=["pdf", "png", "jpg", "jpeg"], key="doc_uploader")
+        if uploaded_file:
+            st.success(f"Attached: {uploaded_file.name}")
+
+with bottom_col_text:
+    user_text = st.chat_input("Tell me what's on your mind... 💭")
+
+# Handle Inputs & Generate Response
 user_prompt = user_text
 input_parts = []
 has_attachment = False
@@ -209,7 +225,6 @@ if user_text:
 if user_prompt or has_attachment:
     st.session_state.messages.append({"role": "user", "text": user_prompt})
 
-    # Prepare Gemini Request
     sys_instruction = (
         "You are MindEase, a cute, warm, ultra-intelligent, and deeply empathetic AI companion created by Ansh Kumawat. "
         "If asked who built or created you, state explicitly that you were created by Ansh Kumawat. "

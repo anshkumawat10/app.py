@@ -73,7 +73,7 @@ st.markdown("""
         font-weight: 600 !important;
     }
 </style>
-""", unsafe_allow_text_gradient=True)
+""", unsafe_allow_html=True)
 
 # App Header
 st.title("🌱 MindEase")
